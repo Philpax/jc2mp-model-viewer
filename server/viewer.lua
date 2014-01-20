@@ -22,9 +22,7 @@ end
 
 function ModelViewer:ModuleUnload()
 	for k, v in pairs(self.objects) do
-		if self.objects[k] then
-			self.objects[k]:Remove()
-		end
+		v:Remove()
 	end
 end
 
