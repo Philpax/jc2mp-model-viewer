@@ -1,6 +1,6 @@
 class 'ModelViewer'
 
-local mv = nil
+__model_viewer = nil
 Events:Subscribe('ModuleLoad', function()
-	mv = ModelViewer()
+	__model_viewer = ModelViewer()
 end)
