@@ -35,17 +35,13 @@ end
 function ModelViewer:ChangeObject(e, sender)
 	self:CleanupPlayer(sender)
 
-	if string.sub(e.archive, string.len(e.archive)) == 'z' then
-		e.archive = string.sub(e.archive, 1, string.len(e.archive) - 1)
-	end
-
-	self.objects[sender:GetId()] = StaticObject.Create({
+	self.objects[sender:GetId()] = StaticObject.Create
+	{
 		model = e.archive .. '/' .. e.lod,
 		collision = e.archive .. '/' .. e.physics,
 		position = e.position,
-		angle = Angle(),
-		fixed = false
-	})
+		angle = Angle()
+	}
 
 	print('Loaded ' .. self.objects[sender:GetId()]:GetModel())
 end
