@@ -38,14 +38,28 @@ function ModelViewer:__init()	; EventBase.__init(self)
 
 	self.input_timer = Timer()
 
-	for k, v in ipairs( models ) do
-		node = self.tree:AddNode( v.name )
+	-- Generate a sorted list of names
+	local names = {}
 
-		for k2, v2 in ipairs( v.files ) do
-			child_node = node:AddNode( v2.model )
+	for archive_name, _ in pairs( models ) do
+		table.insert( names, archive_name )
+	end
+
+	table.sort( names )
+
+	-- Iterate through the list and create tree nodes
+	for _, name in ipairs( names ) do
+		node = self.tree:AddNode( name )
+
+		for i, model in ipairs( models[name] ) do
+			child_node = node:AddNode( model[1] )
+			child_node:SetDataNumber( "Index", i )
 			child_node:Subscribe( "Select", self, self.ModelSelected )
 		end
 	end
+
+	-- Disable locking by default
+	self:SetLock( false )
 end
 
 function ModelViewer:SetActive( active )
@@ -66,9 +80,12 @@ end
 
 function ModelViewer:SetLock( lock )
 	Mouse:SetVisible( lock )
-	self.orbit_camera.locked = not self.orbit_camera.locked
-	self.locked_text:SetText( 
-		"Locked: " .. tostring( self.orbit_camera.locked ) )
+	if self.orbit_camera then
+		self.orbit_camera.locked = not self.orbit_camera.locked
+	end
+	self.locked_text:SetText( "Locked: " .. tostring( lock ) )
+	self.window:SetEnabled( self:GetLock() )
+	self.tree:SetEnabled( self:GetLock() )
 end
 
 -- Events
@@ -93,7 +110,6 @@ function ModelViewer:LocalPlayerInput( e )
 	if e.input == Action.Reload then
 		if self.input_timer:GetSeconds() > 0.25 then
 			self:SetLock( not self:GetLock() )
-			self.window:SetEnabled( self:GetLock() )
 
 			self.input_timer:Restart()
 			return false
@@ -108,21 +124,10 @@ end
 function ModelViewer:ModelSelected( window )
 	local lod = window:GetText()
 	local archive = window:GetParent():GetText()
-	local physics = ""
+	local index = window:GetDataNumber( "Index" )
+	local physics = models[archive][index][2]
 
-	-- Dirty++
-	for k, v in ipairs(models) do
-		if v.name == archive then
-			for k2, v2 in pairs(v.files) do
-				if v2.model == lod then
-					physics = v2.physics
-					break
-				end
-			end
-		end
-	end
-
-	archive = FileName.basename( archive, "\\" )
+	archive = FileName.basename( archive, "/" )
 
 	Network:Send( "RequestObjectChange", { archive, lod, physics } )
 end
