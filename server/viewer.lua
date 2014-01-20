@@ -3,7 +3,6 @@ function ModelViewer:__init()	; EventBase.__init(self)
 	self:NetworkSubscribe('ChangeObject')
 	self:EventSubscribe('ModuleUnload')
 	self:EventSubscribe('PlayerQuit')
-	--self:EventSubscribe('PostTick')
 
 	self.objects = {}
 
@@ -31,20 +30,6 @@ end
 
 function ModelViewer:PlayerQuit(e)
 	self:CleanupPlayer(e.player)
-end
-
-local t = Timer()
-function ModelViewer:PostTick(e)
-	if t:GetMilliseconds() < 500 then
-		return
-	end
-
-	for k, v in pairs(self.objects) do
-		local ang = v:GetAngle()
-		v:SetAngle(ang * Angle(1.1, 0, 0))
-	end
-
-	t:Restart()
 end
 
 function ModelViewer:ChangeObject(e, sender)
