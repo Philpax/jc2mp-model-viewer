@@ -1,3 +1,5 @@
+-- dreadmullet's orbit camera
+-- https://github.com/dreadmullet/ChaosDerby/blob/master/client/cOrbitCamera.lua
 
 function OrbitCamera:__init()
 	

@@ -55,6 +55,7 @@ function ModelViewer:CalcView()
 	return false
 end
 
+-- http://ftp.nsysu.edu.tw/FreeBSD/ports/local-distfiles/philip/filename.lua%3Frev=1.2
 basename = function(path, dirsep)
 	local i = string.len(path)
 
