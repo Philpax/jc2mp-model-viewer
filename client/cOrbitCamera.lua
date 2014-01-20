@@ -8,8 +8,9 @@ function OrbitCamera:__init()
 	self.minPitch = math.rad(-89)
 	self.maxPitch = math.rad(89)
 	self.minDistance = 1
-	self.maxDistance = 100
+	self.maxDistance = 1000
 	self.collision = false
+	self.locked = false
 	
 	self.position = Vector3(0 , 10000 , 0)
 	self.angle = Angle(0 , math.rad(-89) , 0)
@@ -90,6 +91,9 @@ function OrbitCamera:CalcView()
 end
 
 function OrbitCamera:LocalPlayerInput(args)
+
+	if self.locked then return true end
+
 	local RotateYaw = function(value)
 		self.angleBuffer.yaw = self.angleBuffer.yaw + value * self.sensitivityRot
 	end
@@ -120,6 +124,8 @@ function OrbitCamera:LocalPlayerInput(args)
 end
 
 function OrbitCamera:MouseScroll(args)
+
+	if self.locked then return true end
 	
 	self.distanceDeltaBuffer = args.delta
 	
