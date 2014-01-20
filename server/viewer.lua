@@ -20,11 +20,24 @@ function ModelViewer:SetCurrentObject( model, collision )
 
 	self.object = StaticObject.Create
 	{
-		model = model,
-		collision = collision,
+		model = model, -- Model path
+
+		collision = collision, -- Physics path (can be nil or empty)
+		
 		position = self.position,
+
 		angle = Angle(),
-		world = self.world
+
+		world = self.world,	-- The world in which to spawn this object in 
+							-- (DefaultWorld by default)
+		enabled = true, -- Whether this object is visible to players (true by default)
+
+		fixed = true 	-- Whether this object is fixed in the world (true by default);
+						-- if you set this to false, the object uses physics to simulate
+						-- movement between positions, allowing for the creation of moving
+						-- objects with players on them; however, this may reduce performance
+						-- and introduce FPS glitches, so only disable fixed when 100%
+						-- necessary
 	}
 
 	self.object:SetStreamDistance( 2000 )
