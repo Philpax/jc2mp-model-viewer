@@ -26,8 +26,6 @@ function ModelViewer:ModuleUnload()
 		if self.objects[k] then
 			self.objects[k]:Remove()
 		end
-
-		self.objects[k] = nil
 	end
 end
 
