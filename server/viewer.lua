@@ -4,12 +4,16 @@ function ModelViewer:__init()	; EventBase.__init(self)
 	self:EventSubscribe( "PlayerChat" )
 	self:EventSubscribe( "PlayerQuit" )
 	self:EventSubscribe( "ModuleUnload" )
+
 	self:NetworkSubscribe( "RequestObjectChange" )
+	self:NetworkSubscribe( "TimeChange" )
 
 	self.position = Vector3( 4339, 6175, -4631 )
 	self.viewers = {}
 
 	self.world = World.Create()
+	self.world:SetTime( 12 )
+	self.world:SetTimeStep( 0 )
 end
 
 function ModelViewer:SetCurrentObject( model, collision )
@@ -23,7 +27,7 @@ function ModelViewer:SetCurrentObject( model, collision )
 		model = model, -- Model path
 
 		collision = collision, -- Physics path (can be nil or empty)
-		
+
 		position = self.position,
 
 		angle = Angle(),
@@ -36,7 +40,7 @@ function ModelViewer:SetCurrentObject( model, collision )
 						-- if you set this to false, the object uses physics to simulate
 						-- movement between positions, allowing for the creation of moving
 						-- objects with players on them; however, this may reduce performance
-						-- and introduce FPS glitches, so only disable fixed when 100%
+						-- and introduce physics glitches, so only disable fixed when 100%
 						-- necessary
 	}
 
@@ -113,4 +117,10 @@ function ModelViewer:RequestObjectChange( e, sender )
 	local model = e[1] .. "/" .. e[2]
 	local collision = e[1] .. "/" .. e[3]
 	self:SetCurrentObject( model, collision )
+end
+
+function ModelViewer:TimeChange( time, sender )
+	self.world:SetTime( time )
+
+	Network:SendToPlayers( self.viewers, "TimeChange", { time, sender } )
 end

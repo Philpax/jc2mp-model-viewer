@@ -23,6 +23,26 @@ function ModelViewer:__init()	; EventBase.__init(self)
 	self.model_text:SetHeight(16)
 	self.model_text:SetAlignment( GwenPosition.Bottom )
 
+	self.slider_base = BaseWindow.Create( self.window )
+	self.slider_base:SetDock( GwenPosition.Bottom )
+	self.slider_base:SetHeight(16)
+
+	self.time_text = Label.Create( self.slider_base )
+	self.time_text:SetDock( GwenPosition.Left )
+	self.time_text:SetAlignment( GwenPosition.Bottom )
+	local time = Game:GetTime()
+	self.time_text:SetText( 
+		("Time: %i:%.02i"):format( time, (time - math.floor(time)) * 60 ) )
+	self.time_text:SizeToContents()
+
+	self.slider = HorizontalSlider.Create( self.slider_base )
+	self.slider:SetDock( GwenPosition.Fill )
+	self.slider:SetRange( 0, 24 )
+	self.slider:SetValue( time )
+	self.slider:SetNotchCount( 48 )
+	self.slider:SetClampToNotches( true )
+	self.slider:Subscribe( "ValueChanged", self, self.TimeSliderChanged )
+
 	self.locked_text = Label.Create( self.window )
 	self.locked_text:SetDock( GwenPosition.Bottom )
 	self.locked_text:SetText( "Locked: false" )
@@ -30,10 +50,13 @@ function ModelViewer:__init()	; EventBase.__init(self)
 	self.locked_text:SetAlignment( GwenPosition.Bottom )
 
 	self.position = Vector3.Zero
+	self.locked = false
 
 	self:NetworkSubscribe( "ObjectChange" )
 	self:NetworkSubscribe( "PlayerJoinView" )
 	self:NetworkSubscribe( "PlayerQuitView" )
+	self:NetworkSubscribe( "TimeChange" )
+
 	self:EventSubscribe( "LocalPlayerInput" )
 
 	self.input_timer = Timer()
@@ -75,35 +98,24 @@ function ModelViewer:SetActive( active )
 end
 
 function ModelViewer:GetLock()
-	return self.orbit_camera.locked
+	return self.locked
 end
 
 function ModelViewer:SetLock( lock )
+	self.locked = lock
+
 	Mouse:SetVisible( lock )
+
 	if self.orbit_camera then
-		self.orbit_camera.locked = not self.orbit_camera.locked
+		self.orbit_camera.locked = self.locked
 	end
-	self.locked_text:SetText( "Locked: " .. tostring( lock ) )
+
+	self.locked_text:SetText( "Locked: " .. tostring( self:GetLock() ) )
 	self.window:SetEnabled( self:GetLock() )
 	self.tree:SetEnabled( self:GetLock() )
 end
 
 -- Events
-function ModelViewer:ObjectChange( e )
-	self.model_text:SetText( "Model: " .. e[1] )
-	self.physics_text:SetText( "Collision: " .. e[2] )
-end
-
-function ModelViewer:PlayerJoinView( e )
-	self.position = e[3]
-	self:ObjectChange( e )
-	self:SetActive( true )
-end
-
-function ModelViewer:PlayerQuitView( e )
-	self:SetActive( false )
-end
-
 function ModelViewer:LocalPlayerInput( e )
 	if not self.window:GetVisible() then return true end
 
@@ -116,9 +128,49 @@ function ModelViewer:LocalPlayerInput( e )
 		end
 	end
 
-	if self.orbit_camera.locked then return false end
+	if self:GetLock() then return false end
 
 	return true
+end
+
+-- Network Events
+function ModelViewer:ObjectChange( e )
+	self.model_text:SetText( "Model: " .. e[1] )
+	self.physics_text:SetText( "Collision: " .. e[2] )
+end
+
+function ModelViewer:PlayerJoinView( e )
+	self.position = e[3]
+	self:ObjectChange( e )
+	self:SetActive( true )
+
+	local time = Game:GetTime()
+
+	self.time_text:SetText( 
+		("Time: %i:%.02i"):format( time, (time - math.floor(time)) * 60 ) )
+
+	self.slider:SetValue( time )
+end
+
+function ModelViewer:PlayerQuitView( e )
+	self:SetActive( false )
+end
+
+function ModelViewer:TimeChange( e )
+	local time = e[1]
+	local sender = e[2]
+
+	self.time_text:SetText( 
+		("Time: %i:%.02i"):format( time, (time - math.floor(time)) * 60 ) )
+
+	if LocalPlayer ~= sender then
+		self.slider:SetValue( time )
+	end
+end
+
+-- GWEN Events
+function ModelViewer:TimeSliderChanged( slider )
+	Network:Send( "TimeChange", slider:GetValue() )
 end
 
 function ModelViewer:ModelSelected( window )
